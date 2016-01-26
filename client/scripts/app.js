@@ -7,6 +7,8 @@ var app = {
   init: function() {
     app.fetch();
   },
+
+  // TODO: Send message to server
   send: function(message) {
     $.ajax({
       // This is the url you should use to communicate with the parse API server.
@@ -23,27 +25,47 @@ var app = {
       }
     });
   },
-  fetch: function() {
-    app.clearMessages();
-    var first = $.get('https://api.parse.com/1/classes/chatterbox');
 
-    setTimeout(function() {
-      var results = first.responseJSON.results;
-      _.each(results,function(el){
-        rooms[el.roomname] = el.roomname;
-      });
-      console.log(rooms);
-      for(var key in rooms){
-        app.addRoom(rooms[key]);
+  fetch: function(message) {
+
+    $.ajax({
+      url: 'https://api.parse.com/1/classes/chatterbox',
+      type: 'GET',
+      data: {
+        order: "-createdAt",
+        limit: 1000
+      },
+      contentType: 'application/json',
+      success: function(data) {
+
+        // Adding rooms
+        _.each(data.results, function(el) {
+          rooms[el.roomname] = el.roomname;
+        });
+        $('ul').html('');
+        for (var key in rooms) {
+          if (!rooms[key]) {
+            continue;
+          }
+          if ($('#' + key)) {
+            app.addRoom(rooms[key]);
+          }
+        }
+
+        // clearing the list and adding messages
+        app.clearMessages();
+        _.each(_.filter(data.results, function(el) {
+          return el.roomname === currentRoom;
+        }), function(el) {
+          app.addMessage(el);
+        });
+      },
+      error: function(data) {
+        console.error('chatterbox: Failed to retrieve messages');
       }
-      _.each(_.filter(results, function(el) {
-        return el.roomname === currentRoom;
-      }), function(el) {
-        app.addMessage(el);
-      });
-    }, 1000);
-
+    });
   },
+
   clearMessages: function() {
     $('#chats').html('');
   },
@@ -53,10 +75,13 @@ var app = {
     $('#chats').append('<div class = username>' +
       message.username + ": " + message.text + '</div');
   },
+
   addRoom: function(roomName) {
-    $('#roomSelect').append('<li><a class="room, '+roomName+'"href=#>' + roomName + '</a></li>');
+    $('#roomSelect').append('<li><a class="room" id="' + roomName + '" href=#>' + roomName + '</a></li>');
   },
+
   addFriend: function(friend) {},
+  
   handleSubmit: function() {}
 };
 
@@ -67,18 +92,24 @@ $(document).on('click', '.submit', function() {
     'username': username,
     'roomname': currentRoom
   };
-
   app.send(message);
   app.handleSubmit();
   $('#message').val('');
 });
 
+// TODO: Add friend by clicking on username
 $(document).on('click', '.username', function() {
   console.log('click');
   app.addFriend();
 });
 
-$(document).ready(function() {
+$(document).on('click', '.room', function(e) {
+  currentRoom = $(this).attr('id');
+  $('.dropdown-toggle').text(currentRoom);
+  app.fetch();
+});
 
+
+$(document).ready(function() {
   app.init();
 });
