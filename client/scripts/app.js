@@ -121,7 +121,6 @@ $(document).keypress(function(e) {
 
 // TODO: Add friend by clicking on username
 $(document).on('click', '.username', function() {
-  console.log('click');
   var name = $(this).attr('class').split(' ').slice(1)[0];
   app.addFriend(name);
   $('div .' + name).toggleClass('friend');
@@ -144,4 +143,10 @@ $(document).on('click', '.addroom', function() {
   app.clearMessages();
   $('#addroom').val('');
 });
+
+$(document).on('click', '#refresh', function(){
+  app.fetch();
+});
+
+
 
