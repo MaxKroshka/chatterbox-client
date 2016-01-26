@@ -10,6 +10,11 @@ body {
     font-family: 'geomanist';
 }
 
+#friendlist {
+    float:left;
+    background-color: green;
+    width: 200px;
+}
 #main, #chats {
     width: 700px;
     margin: auto;
@@ -72,6 +77,9 @@ button, .btn {
 input {
     height: 31px;
 }
+
+.chat span{/*????????*/}
+
 .chat {
     padding: 5px;
     margin-bottom: 5px;
