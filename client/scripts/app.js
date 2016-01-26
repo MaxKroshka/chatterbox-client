@@ -1,7 +1,7 @@
 var currentRoom = 'lobby';
 var username = location.search.slice(10);
 var rooms = {};
-
+var banned = ['<','>','%','&','$','/','\\'];
 var app = {
 
   init: function() {
@@ -38,9 +38,12 @@ var app = {
       contentType: 'application/json',
       success: function(data) {
 
-        // Adding rooms
+//        Adding rooms
         _.each(data.results, function(el) {
-          rooms[el.roomname] = el.roomname;
+          if(el.roomname){
+          var room = el.roomname.replace(/[<]/, '').replace(/[>]/, '');
+          rooms[room] = room;
+          }
         });
         $('ul').html('');
         for (var key in rooms) {
@@ -55,7 +58,8 @@ var app = {
         // clearing the list and adding messages
         app.clearMessages();
         _.each(_.filter(data.results, function(el) {
-          return el.roomname === currentRoom;
+          var room = el.roomname.replace(/[<]/, '').replace(/[>]/, '');
+          return room === currentRoom;
         }), function(el) {
           app.addMessage(el);
         });
@@ -72,8 +76,8 @@ var app = {
 
   // Creates class for each message's user
   addMessage: function(message) {
-    $('#chats').append('<div class = username>' +
-      message.username + ": " + message.text + '</div');
+    var text = message.username + ": " + message.text;
+    $('#chats').append($('<div class = "username"></div>').text(text));
   },
 
   addRoom: function(roomName) {
@@ -81,7 +85,7 @@ var app = {
   },
 
   addFriend: function(friend) {},
-  
+
   handleSubmit: function() {}
 };
 
