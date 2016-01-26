@@ -1,8 +1,13 @@
+@font-face {
+  font-family: 'geomanist';
+  src: url('geomanist.eot'); 
+}
+
 body {
     background-color: #34495e;
     text-align: center;
     padding: 0 25px;
-    font-family: arial, sans-serif;
+    font-family: 'geomanist';
 }
 
 #main, #chats {
@@ -58,7 +63,15 @@ form input[type=text] {
     font-size: 12px;
     padding: 5px;
 }
-
+button, .btn {
+    font-weight: bold;
+    font-family: Arial;
+    margin-left: 2px;
+    margin-top: 2px;
+}
+input {
+    height: 31px;
+}
 .chat {
     padding: 5px;
     margin-bottom: 5px;
@@ -67,6 +80,9 @@ form input[type=text] {
 
 .chat .username {
     font-weight: 400;
+    border-bottom: 1px solid black;
+    padding: 5px;
+    margin-top: 1px;
 }
 
 .chat .friend {

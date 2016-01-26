@@ -42,7 +42,7 @@ var app = {
 //        Adding rooms
         _.each(data.results, function(el) {
           if(el.roomname && el.roomname.length < 10){
-          var room = el.roomname.replace(/[<]/g, '').replace(/[>]/g, '').replace(/[#]/g, '').replace(/["]/g, '').replace(/[']/g, '').replace(/[\/]/g, '');
+          var room = el.roomname.replace(/[<]/g, '').replace(/[>]/g, '').replace(/[#]/g, '').replace(/["]/g, '').replace(/[']/g, '').replace(/[\/]/g, '').replace(/[?]/g, '');
           rooms[room] = room;
           }
         });
@@ -88,7 +88,11 @@ var app = {
   },
 
   addFriend: function(friend) {
+    if(friends[friend]){
+      delete friends[friend];
+    } else{
     friends[friend] = friend;
+    }
   },
 
   handleSubmit: function() {}
