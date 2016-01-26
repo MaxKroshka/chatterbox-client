@@ -2,6 +2,7 @@ var currentRoom = 'lobby';
 var username = location.search.slice(10);
 var rooms = {};
 var banned = ['<','>','%','&','$','/','\\'];
+var friends = {};
 var app = {
 
   init: function() {
@@ -40,8 +41,8 @@ var app = {
 
 //        Adding rooms
         _.each(data.results, function(el) {
-          if(el.roomname){
-          var room = el.roomname.replace(/[<]/, '').replace(/[>]/, '');
+          if(el.roomname && el.roomname.length < 10){
+          var room = el.roomname.replace(/[<]/g, '').replace(/[>]/g, '').replace(/[#]/g, '').replace(/["]/g, '').replace(/[']/g, '').replace(/[\/]/g, '');
           rooms[room] = room;
           }
         });
@@ -58,8 +59,10 @@ var app = {
         // clearing the list and adding messages
         app.clearMessages();
         _.each(_.filter(data.results, function(el) {
-          var room = el.roomname.replace(/[<]/, '').replace(/[>]/, '');
+          if(el.roomname && el.roomname.length < 10){
+          var room = el.roomname;
           return room === currentRoom;
+        }
         }), function(el) {
           app.addMessage(el);
         });
@@ -77,14 +80,16 @@ var app = {
   // Creates class for each message's user
   addMessage: function(message) {
     var text = message.username + ": " + message.text;
-    $('#chats').append($('<div class = "username"></div>').text(text));
+    $('#chats').append($('<div class = "username"></div>').text(text).addClass(message.username));
   },
 
   addRoom: function(roomName) {
-    $('#roomSelect').append('<li><a class="room" id="' + roomName + '" href=#>' + roomName + '</a></li>');
+    $('#roomSelect').append('<li><a class="room" id=' + roomName + ' href=#>' + roomName + '</a></li>');
   },
 
-  addFriend: function(friend) {},
+  addFriend: function(friend) {
+    friends[friend] = friend;
+  },
 
   handleSubmit: function() {}
 };
@@ -98,13 +103,28 @@ $(document).on('click', '.submit', function() {
   };
   app.send(message);
   app.handleSubmit();
+  app.fetch();
   $('#message').val('');
 });
+
+$(document).keypress(function(e) {
+    if(e.which == 13 ) {
+       if( $('#addroom').val() ) {
+        $('.addroom').click();
+       }
+       else{
+        $('.submit').click();
+       }
+    }
+});
+
 
 // TODO: Add friend by clicking on username
 $(document).on('click', '.username', function() {
   console.log('click');
-  app.addFriend();
+  var name = $(this).attr('class').split(' ').slice(1)[0];
+  app.addFriend(name);
+  $('div .' + name).toggleClass('friend');
 });
 
 $(document).on('click', '.room', function(e) {
@@ -117,3 +137,11 @@ $(document).on('click', '.room', function(e) {
 $(document).ready(function() {
   app.init();
 });
+
+$(document).on('click', '.addroom', function() {
+  var roomName = $('#addroom').val();
+  currentRoom = roomName;
+  app.clearMessages();
+  $('#addroom').val('');
+});
+
