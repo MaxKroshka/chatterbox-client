@@ -12,6 +12,7 @@ body {
 
 #friendlist {
     float:left;
+    position: fixed;
     background-color: green;
     width: 200px;
 }

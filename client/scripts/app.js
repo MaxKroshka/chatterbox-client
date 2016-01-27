@@ -5,11 +5,12 @@ var app = {
   friends: {},
   lastMessageId: 0,
 
+  // Loads initial messages on page
   init: function() {
     app.fetch('roomname', app.currentRoom);
   },
 
-  // TODO: Send message to server
+  // Send message to server
   send: function(message) {
     $.ajax({
       // This is the url you should use to communicate with the parse API server.
@@ -17,42 +18,34 @@ var app = {
       type: 'POST',
       data: JSON.stringify(message),
       contentType: 'application/json',
+
+      // Logs confirmation message if send successful
       success: function(data) {
         console.log('chatterbox: Message sent');
       },
+
+      // Logs error message if send fails
       error: function(data) {
-        // See: https://developer.mozilla.org/en-US/docs/Web/API/console.error
         console.error('chatterbox: Failed to send message');
       }
     });
   },
 
+  // Request new data from server
   fetch: function(filterBy, compareTo) {
-
     $.ajax({
       url: 'https://api.parse.com/1/classes/chatterbox',
       type: 'GET',
       data: {'order': '-createdAt'},
       contentType: 'application/json',
+      
+      // Populates rooms and clears/repopulates messages if fetch successful
       success: function(data) {
-
-        //Adding rooms
         app.popRooms(data.results);
-
-        // clearing the list and adding messages
-        var filtered = _.filter(data.results, function(el) {
-          if (el[filterBy] && el[filterBy].length < 10) {
-            return el[filterBy] === compareTo;
-          }
-        });
-        if (filtered[0].objectId !== app.lastMessageId) {
-          app.clearMessages();
-          _.each(filtered, function(el) {
-            app.addMessage(el);
-          });
-          app.lastMessageId = filtered[0].objectId;
-        }
+        app.popMessages(data.results, filterBy, compareTo);
       },
+
+      // Logs error if fetch fails
       error: function(data) {
         console.error('chatterbox: Failed to retrieve messages');
       }
@@ -63,36 +56,55 @@ var app = {
     $('#chats').html('');
   },
 
-  // Creates class for each message's user
+  // Adds message & prettified timestamp to chats
   addMessage: function(message) {
     var text = message.username + ": " + message.text;
     var timeElement = '<span data-livestamp=' + message.createdAt + '></span>';
 
+  // Creates class for each message's user, for use in adding friends
     $('#chats').append($('<div class = "username"></div>').text(text).addClass(message.username));
-    $('#chats').append('\n' + timeElement);
+    $('#chats').append(timeElement);
   },
+  
+  // Populates all new messages, based on the latest messageId
+  popMessages: function(data, filterBy, compareTo) {
+    var filtered = _.filter(data, function(el) {
+      if (el[filterBy] && el[filterBy].length < 10) {
+        return el[filterBy] === compareTo;
+      }
+    });
+    if (filtered.length && filtered[0].objectId !== app.lastMessageId) {
+      app.clearMessages();
+      _.each(filtered, function(el) {
+        app.addMessage(el);
+      });
+      app.lastMessageId = filtered[0].objectId;
+    }
+  },
+
+  // Creates class and ID for each new room & appends to roomSelect dropdown
+  addRoom: function(roomName) {
+    $('#roomSelect').append('<li><a class="room" id=' + roomName + ' href=#>' + roomName + '</a></li>');
+  },
+
+  // Iterates through all data, sanitizes room inputs and runs function to append new rooms to list
   popRooms: function(data){
     var rooms = {};
     _.each(data, function(el) {
       if (el.roomname && el.roomname.length < 10) {
         var room = el.roomname.replace(/[<]/g, '').replace(/[>]/g, '').replace(/[#]/g, '').replace(/["]/g, '').replace(/[']/g, '').replace(/[\/]/g, '').replace(/[?]/g, '');
-        rooms[room] = room;
+        rooms[room] = true;
       }
     });
     $('ul').html('');
     for (var key in rooms) {
-      if (!rooms[key]) {
-        continue;
-      }
-      if ($('#' + key)) {
-        app.addRoom(rooms[key]);
+      if (rooms[key]) {
+        app.addRoom(key);
       }
     }
   },
-  addRoom: function(roomName) {
-    $('#roomSelect').append('<li><a class="room" id=' + roomName + ' href=#>' + roomName + '</a></li>');
-  },
 
+  // Adds/removes clicked friend name from friends object
   addFriend: function(friend) {
     if (app.friends[friend]) {
       delete app.friends[friend];
@@ -101,9 +113,11 @@ var app = {
     }
   },
 
+  // Unused helper function
   handleSubmit: function() {}
 };
 
+// Composes/sends messages, reloads room to show new message
 $(document).on('click', '.submit', function() {
   var text = $('#message').val();
   var message = {
@@ -117,6 +131,7 @@ $(document).on('click', '.submit', function() {
   $('#message').val('');
 });
 
+// Accepts ENTER to submit room or message text
 $(document).keypress(function(e) {
   if (e.which == 13) {
     if ($('#addroom').val()) {
@@ -127,8 +142,7 @@ $(document).keypress(function(e) {
   }
 });
 
-
-// TODO: Add friend by clicking on username
+// Adds user as friend when username clicked, highlights friend's posts
 $(document).on('click', '.username', function() {
   var name = $(this).attr('class').split(' ').slice(1)[0];
   app.addFriend(name);
@@ -136,17 +150,20 @@ $(document).on('click', '.username', function() {
   $('#friendlist').append('<div>' + name + '</div>');
 });
 
+// Sets selected room from dropdown to be currentRoom
+// Fetches messages from newly selected room
 $(document).on('click', '.room', function(e) {
   app.currentRoom = $(this).attr('id');
   $('.dropdown-toggle').text(app.currentRoom);
   app.fetch('roomname', app.currentRoom);
 });
 
-
+// Initializes first load of messages on document load
 $(document).ready(function() {
   app.init();
 });
 
+// CREATE ROOM BUTTON - Sets user generated room to currentRoom
 $(document).on('click', '.addroom', function() {
   var roomName = $('#addroom').val();
   app.currentRoom = roomName;
@@ -154,6 +171,7 @@ $(document).on('click', '.addroom', function() {
   $('#addroom').val('');
 });
 
+// REFRESH BUTTON - Loads new messages in current room
 $(document).on('click', '#refresh', function() {
   app.fetch('roomname', app.currentRoom);
 });
