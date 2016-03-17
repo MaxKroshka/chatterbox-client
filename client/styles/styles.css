@@ -62,6 +62,9 @@ form {
     padding-left: 0;
     margin-bottom: 20px;
 }
+.livestamp {
+    font-weight: 800;
+}
 
 form input[type=text] {
     margin-right: 10px;

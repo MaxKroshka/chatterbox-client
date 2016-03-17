@@ -59,11 +59,10 @@ var app = {
   // Adds message & prettified timestamp to chats
   addMessage: function(message) {
     var text = message.username + ": " + message.text;
-    var timeElement = '<span data-livestamp=' + message.createdAt + '></span>';
+    var timeElement = '<span class=livestamp data-livestamp=' + message.createdAt + '></span>';
 
   // Creates class for each message's user, for use in adding friends
-    $('#chats').append($('<div class = "username"></div>').text(text).addClass(message.username));
-    $('#chats').append(timeElement);
+    $('#chats').append(($('<div class = "username"></div>').text(text).addClass(message.username)).append(timeElement));
   },
   
   // Populates all new messages, based on the latest messageId
@@ -120,6 +119,9 @@ var app = {
 // Composes/sends messages, reloads room to show new message
 $(document).on('click', '.submit', function() {
   var text = $('#message').val();
+    if(text.length < 1){
+    return;
+  }
   var message = {
     'text': text,
     'username': app.username,
@@ -147,7 +149,7 @@ $(document).on('click', '.username', function() {
   var name = $(this).attr('class').split(' ').slice(1)[0];
   app.addFriend(name);
   $('div .' + name).toggleClass('friend');
-  $('#friendlist').append('<div>' + name + '</div>');
+  //$('#friendlist').append('<div>' + name + '</div>');
 });
 
 // Sets selected room from dropdown to be currentRoom
@@ -166,6 +168,9 @@ $(document).ready(function() {
 // CREATE ROOM BUTTON - Sets user generated room to currentRoom
 $(document).on('click', '.addroom', function() {
   var roomName = $('#addroom').val();
+  if(roomName.length < 1){
+    return;
+  }
   app.currentRoom = roomName;
   app.clearMessages();
   $('#addroom').val('');
